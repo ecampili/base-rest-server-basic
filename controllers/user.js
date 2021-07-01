@@ -1,40 +1,89 @@
 const { response } = require('express')
+const bcrypt = require('bcryptjs')
+const User = require('../models/User')
 
 
-const getUsers = (req, res = response) => {
-    const { name, apikey, page = 1, limit } = req.query
+
+const getUsers = async (req, res = response) => {
+    const { desde = 0, limite = 5 } = req.query
+
+    const promise1 = User.countDocuments({ isActive: true })
+
+    const promise2 = User.find({ isActive: true })
+        .skip(Number(desde))
+        .limit(Number(limite))
+
+    const [total, users] = await Promise.all([
+        promise1,
+        promise2
+    ])
+
     res.json({
-        msg: 'get User con controller',
-        name,
-        apikey,
-        page,
-        limit
+        total,
+        users
     })
 }
 
-const createUser = (req, res = response) => {
-    const { name, age } = req.body
-    res.json({
-        msg: 'create User con controller',
-        name,
-        age
-    })
+const createUser = async (req, res = response) => {
+
+    try {
+        const { name, email, password, role } = req.body
+        const user = new User({
+            name,
+            email,
+            password,
+            role
+        });
+
+        // encriptar password
+        const salt = bcrypt.genSaltSync(10);
+        user.password = bcrypt.hashSync(password, salt)
+
+
+        // guardar en database
+        await user.save();
+        return res.json({
+            user
+        })
+
+    } catch (e) {
+        console.log(e)
+        res.status(500).json({
+            msg: e.message
+        })
+    }
 }
 
-const updateUser = (req, res = response) => {
+const updateUser = async (req, res = response) => {
     const { id } = req.params
-    const { name, age } = req.body
-    res.json({
-        msg: 'update User con controller',
-        id
+    const { _id, password, google, email, ...rest } = req.body
+
+
+    // validar contra base de datos
+    if (password) {
+        // encriptar password
+        const salt = bcrypt.genSaltSync(10);
+        rest.password = bcrypt.hashSync(password, salt)
+    }
+
+    const updateUser = await User.findByIdAndUpdate(id, rest);
+
+    return res.json({
+        updateUser
     })
 }
 
-const deleteUser = (req, res = response) => {
+const deleteUser = async (req, res = response) => {
     const { id } = req.params
+
+    // borar fisicamente
+    //const user = await User.findByIdAndDelete(id);
+
+    // borrar logicamente
+    const user = await User.findByIdAndUpdate(id, { isActive: false })
+
     res.json({
-        msg: 'delete User con controller',
-        id
+        user
     })
 }
 
