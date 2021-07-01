@@ -31,10 +31,14 @@ router.post('/', [
 router.put('/:id', [
     check('id', 'No es un id Valido').isMongoId(),
     check('id').custom((id) => existsUserById(id)),
+    check('role').custom((role) => validateRole(role)),
     validateFields
 ], updateUser)
 
-router.delete('/:id', deleteUser)
+router.delete('/:id', [
+    check('id', 'No es un id Valido').isMongoId(),
+    check('id').custom((id) => existsUserById(id)),
+], deleteUser)
 
 router.patch('/:id', patchUser)
 
