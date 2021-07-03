@@ -83,11 +83,11 @@ const deleteUser = async (req, res = response) => {
     const user = await User.findByIdAndUpdate(id, { isActive: false })
 
     // usuario authenticado
-    const authenticatedUser = req.user
+    //const authenticatedUser = req.user
 
     res.json({
-        user,
-        authenticatedUser
+        user
+        //authenticatedUser
     })
 }
 
