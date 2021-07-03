@@ -82,8 +82,12 @@ const deleteUser = async (req, res = response) => {
     // borrar logicamente usar este modo siempre
     const user = await User.findByIdAndUpdate(id, { isActive: false })
 
+    // usuario authenticado
+    const authenticatedUser = req.user
+
     res.json({
-        user
+        user,
+        authenticatedUser
     })
 }
 
